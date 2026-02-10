@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SilentLeak :: Profile</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            color: #ccc;
+            font-family: monospace;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .header {
+            background: #111;
+            border-bottom: 1px solid #222;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            color: #fff;
+            font-size: 20px;
+            letter-spacing: 3px;
+        }
+        .nav {
+            display: flex;
+            gap: 20px;
+        }
+        .nav a {
+            color: #888;
+            text-decoration: none;
+            padding: 8px 15px;
+            border: 1px solid transparent;
+        }
+        .nav a:hover, .nav a.active {
+            color: #fff;
+            border: 1px solid #444;
+        }
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logout-btn {
+            color: #888;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        .logout-btn:hover {
+            color: #fff;
+        }
+        
+        /* Main Layout */
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            height: calc(100vh - 70px);
+        }
+        
+        /* Profile Sidebar */
+        .profile-sidebar {
+            background: #0a0a0a;
+            border-right: 1px solid #222;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        
+        .avatar {
+            width: 100px;
+            height: 100px;
+            background: #222;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            border: 2px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: #666;
+        }
+        
+        .profile-name {
+            color: #fff;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+        
+        .profile-email {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .reputation {
+            color: #888;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .profile-menu {
+            text-align: left;
+        }
+        
+        .profile-menu-item {
+            color: #aaa;
+            padding: 12px 15px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            margin-bottom: 5px;
+        }
+        
+        .profile-menu-item:hover, .profile-menu-item.active {
+            color: #fff;
+            background: #111;
+            border-left: 3px solid #666;
+        }
+        
+        /* Main Content */
+        .profile-content {
+            padding: 30px;
+            overflow-y: auto;
+        }
+        
+        .content-section {
+            display: none;
+            max-width: 800px;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .section-title {
+            color: #fff;
+            font-size: 24px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #888;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            background: #000;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px;
+            font-family: monospace;
+        }
+        
+        .form-group textarea {
+            height: 150px;
+            resize: vertical;
+        }
+        
+        .btn {
+            background: #222;
+            color: #fff;
+            border: 1px solid #444;
+            padding: 12px 30px;
+            cursor: pointer;
+            font-family: monospace;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .btn:hover {
+            background: #333;
+        }
+        
+        .btn-primary {
+            background: #000;
+            border-color: #666;
+        }
+        
+        /* Upload Form */
+        .file-drop {
+            border: 2px dashed #333;
+            padding: 40px;
+            text-align: center;
+            color: #666;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        .file-drop:hover {
+            border-color: #444;
+            color: #888;
+        }
+        
+        .upload-progress {
+            background: #111;
+            border: 1px solid #222;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #000;
+            border: 1px solid #333;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #666;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        /* My Listings */
+        .my-listings {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .listing-card {
+            background: #111;
+            border: 1px solid #222;
+            padding: 20px;
+        }
+        
+        .listing-status {
+            display: inline-block;
+            padding: 3px 8px;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+        
+        .status-pending {
+            background: #330;
+            color: #f66;
+        }
+        
+        .status-active {
+            background: #030;
+            color: #6f6;
+        }
+        
+        .status-sold {
+            background: #333;
+            color: #ccc;
+        }
+        
+        .listing-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .action-btn {
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            background: #222;
+            border: 1px solid #333;
+            color: #ccc;
+        }
+        
+        .action-btn:hover {
+            background: #333;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">SILENTLEAK</div>
+        <div class="nav">
+            <a href="dashboard.html">DASHBOARD</a>
+            <a href="store.html">STORE</a>
+            <a href="profile.html" class="active">PROFILE</a>
+        </div>
+        <div class="user-menu">
+            <span class="username" id="usernameDisplay">USER</span>
+            <a href="login.html" class="logout-btn">LOGOUT</a>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="container">
+        <!-- Profile Sidebar -->
+        <div class="profile-sidebar">
+            <div class="avatar" id="userAvatar">?</div>
+            <div class="profile-name" id="profileName">USERNAME</div>
+            <div class="profile-email" id="profileEmail">email@example.com</div>
+            <div class="reputation">Reputation: <span id="profileRep">0</span></div>
+            
+            <div class="profile-menu">
+                <div class="profile-menu-item active" data-section="edit">EDIT PROFILE</div>
+                <div class="profile-menu-item" data-section="upload">UPLOAD DATA</div>
+                <div class="profile-menu-item" data-section="listings">MY LISTINGS</div>
+                <div class="profile-menu-item" data-section="transactions">TRANSACTIONS</div>
+                <div class="profile-menu-item" data-section="security">SECURITY</div>
+            </div>
+        </div>
+
+        <!-- Profile Content -->
+        <div class="profile-content">
+            <!-- Edit Profile Section -->
+            <div class="content-section active" id="section-edit">
+                <h2 class="section-title">EDIT PROFILE</h2>
+                <form id="editProfileForm">
+                    <div class="form-group">
+                        <label>USERNAME</label>
+                        <input type="text" id="editUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>EMAIL</label>
+                        <input type="email" id="editEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>TELEGRAM CHAT ID</label>
+                        <input type="text" id="editTelegram">
+                        <div style="color: #666; font-size: 12px; margin-top: 5px;">
+                            For transaction notifications
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>NEW PASSWORD (Leave blank to keep current)</label>
+                        <input type="password" id="editPassword">
+                    </div>
+                    <div class="form-group">
+                        <label>CONFIRM PASSWORD</label>
+                        <input type="password" id="editPasswordConfirm">
+                    </div>
+                    <button type="submit" class="btn btn-primary">UPDATE PROFILE</button>
+                </form>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="content-section" id="section-upload">
+                <h2 class="section-title">UPLOAD DATA / TOOLS</h2>
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <label>ITEM TITLE</label>
+                        <input type="text" id="uploadTitle" required>
+                    </div>
+                    <div class="form-group">
+                        <label>CATEGORY</label>
+                        <select id="uploadCategory" required>
+                            <option value="">SELECT CATEGORY</option>
+                            <option value="1">Database</option>
+                            <option value="2">Leaked Data</option>
+                            <option value="3">Tools</option>
+                            <option value="4">Exploits</option>
+                            <option value="5">Accounts</option>
+                            <option value="6">Tutorials</option>
+                            <option value="7">Software</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>DESCRIPTION</label>
+                        <textarea id="uploadDescription" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>PRICE (BTC)</label>
+                        <input type="number" id="uploadPrice" step="0.0001" min="0.0001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>FILE</label>
+                        <div class="file-drop" id="fileDrop" onclick="document.getElementById('fileInput').click()">
+                            DRAG & DROP OR CLICK TO SELECT FILE
+                        </div>
+                        <input type="file" id="fileInput" style="display: none;">
+                        <div id="fileName" style="color: #888; margin-top: 10px;"></div>
+                    </div>
+                    <div class="upload-progress" id="uploadProgress">
+                        <div>Uploading: <span id="progressText">0%</span></div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">SUBMIT FOR APPROVAL</button>
+                </form>
+            </div>
+
+            <!-- My Listings Section -->
+            <div class="content-section" id="section-listings">
+                <h2 class="section-title">MY LISTINGS</h2>
+                <div class="my-listings" id="myListings">
+                    <!-- Loaded by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        
+        // Check login
+        const userData = JSON.parse(localStorage.getItem('user'));
+        if(!userData) {
+            window.location.href = 'login.html';
+        }
+        
+        document.getElementById('usernameDisplay').textContent = userData.username;
+        
+        // Load profile data
+        function loadProfile() {
+            document.getElementById('profileName').textContent = userData.username;
+            document.getElementById('profileEmail').textContent = userData.email;
+            document.getElementById('userAvatar').textContent = userData.username.charAt(0).toUpperCase();
+            
+            // Fill edit form
+            document.getElementById('editUsername').value = userData.username;
+            document.getElementById('editEmail').value = userData.email;
+            document.getElementById('editTelegram').value = userData.telegram_chat_id || '';
+        }
+        
+        // Section switching
+        document.querySelectorAll('.profile-menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const section = this.dataset.section;
+                
+                // Update menu
+                document.querySelectorAll('.profile-menu-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show section
+                document.querySelectorAll('.content-section').forEach(sec => {
+                    sec.classList.remove('active');
+                });
+                document.getElementById(`section-${section}`).classList.add('active');
+                
+                // Load data for section
+                if(section === 'listings') {
+                    loadMyListings();
+                }
+            });
+        });
+        
+        // Edit profile form
+        document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Update user data (simulated)
+            userData.username = document.getElementById('editUsername').value;
+            userData.email = document.getElementById('editEmail').value;
+            userData.telegram_chat_id = document.getElementById('editTelegram').value;
+            
+            localStorage.setItem('user', JSON.stringify(userData));
+            loadProfile();
+            
+            alert('Profile updated (local)');
+        });
+        
+        // File upload handling
+        let selectedFile = null;
+        
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            selectedFile = e.target.files[0];
+            if(selectedFile) {
+                document.getElementById('fileName').innerHTML = 
+                    `Selected: <strong>${selectedFile.name}</strong> (${formatBytes(selectedFile.size)})`;
+            }
+        });
+        
+        // Drag and drop
+        const fileDrop = document.getElementById('fileDrop');
+        fileDrop.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileDrop.style.borderColor = '#666';
+        });
+        
+        fileDrop.addEventListener('dragleave', () => {
+            fileDrop.style.borderColor = '#333';
+        });
+        
+        fileDrop.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileDrop.style.borderColor = '#333';
+            const files = e.dataTransfer.files;
+            if(files.length > 0) {
+                selectedFile = files[0];
+                document.getElementById('fileName').innerHTML = 
+                    `Selected: <strong>${selectedFile.name}</strong> (${formatBytes(selectedFile.size)})`;
+            }
+        });
+        
+        // Upload form submission
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if(!selectedFile) {
+                alert('Please select a file');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('title', document.getElementById('uploadTitle').value);
+            formData.append('description', document.getElementById('uploadDescription').value);
+            formData.append('price', document.getElementById('uploadPrice').value);
+            formData.append('category_id', document.getElementById('uploadCategory').value);
+            formData.append('file', selectedFile);
+            
+            // Show progress
+            const progress = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            
+            progress.style.display = 'block';
+            progressFill.style.width = '0%';
+            progressText.textContent = '0%';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                // Simulate upload progress
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    progressFill.style.width = `${progress}%`;
+                    progressText.textContent = `${progress}%`;
+                    
+                    if(progress >= 100) {
+                        clearInterval(interval);
+                        const data = await response.json();
+                        
+                        if(data.success) {
+                            alert('Upload submitted! Check Telegram for admin approval.');
+                            document.getElementById('uploadForm').reset();
+                            document.getElementById('fileName').innerHTML = '';
+                            selectedFile = null;
+                        } else {
+                            alert('Upload failed: ' + data.error);
+                        }
+                        
+                        progress.style.display = 'none';
+                    }
+                }, 100);
+                
+            } catch(error) {
+                alert('Upload failed: ' + error.message);
+                progress.style.display = 'none';
+            }
+        });
+        
+        // Load my listings
+        async function loadMyListings() {
+            // In real implementation, fetch from API
+            const listingsContainer = document.getElementById('myListings');
+            listingsContainer.innerHTML = `
+                <div class="listing-card">
+                    <div class="listing-status status-pending">PENDING</div>
+                    <div style="color: #fff; font-size: 16px; margin-bottom: 10px;">Database Dump 2024</div>
+                    <div style="color: #888; font-size: 14px; margin-bottom: 10px;">50k user records with emails</div>
+                    <div style="color: #ccc; font-size: 14px;">Price: 0.015 BTC</div>
+                    <div class="listing-actions">
+                        <button class="action-btn">EDIT</button>
+                        <button class="action-btn">DELETE</button>
+                    </div>
+                </div>
+                <div class="listing-card">
+                    <div class="listing-status status-active">ACTIVE</div>
+                    <div style="color: #fff; font-size: 16px; margin-bottom: 10px;">Exploit Kit v2.0</div>
+                    <div style="color: #888; font-size: 14px; margin-bottom: 10px;">Complete web exploit toolkit</div>
+                    <div style="color: #ccc; font-size: 14px;">Price: 0.025 BTC</div>
+                    <div class="listing-actions">
+                        <button class="action-btn">VIEW</button>
+                        <button class="action-btn">PROMOTE</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Utility function
+        function formatBytes(bytes) {
+            if(bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Initialize
+        loadProfile();
+        
+        // Check hash for direct section access
+        if(window.location.hash === '#upload') {
+            document.querySelector('[data-section="upload"]').click();
+        }
+    </script>
+</body>
+</html>
